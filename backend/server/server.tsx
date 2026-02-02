@@ -32,7 +32,6 @@ app.post("/api/meter-data", async (req, res) => {
   try {
     const {
       timestamp,
-      // avg_power_w, // DEPRECATED: use specific fields below
       avg_power_w_p, // Prosumer power
       avg_power_w_c, // Consumer power
       energy_wh_interval,
@@ -109,7 +108,7 @@ app.post("/api/meter-data", async (req, res) => {
     // 4. Update summary
     await db.ref(`meters/${meterId}/summary`).update({
       type: finalType,
-      last_power_w: powerValue, // convenient summary field
+      last_power_w: powerValue,
       total_energy_wh: energy_wh_total,
       last_updated: new Date().toISOString(),
     });
