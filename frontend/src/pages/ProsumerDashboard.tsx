@@ -9,21 +9,21 @@ import { Zap, Leaf, DollarSign, TrendingUp } from 'lucide-react';
 
 export default function ProsumerDashboard() {
   const [activeItem, setActiveItem] = useState('dashboard');
-  
-  const generationData = useMemo(() => generateTimeSeriesData(24), []);
+
+  const generationData = useMemo(() => generateTimeSeriesData(24, 'prosumer'), []);
   const transfers = useMemo(() => generateTransfers(15), []);
 
-  const totalGeneration = useMemo(() => 
+  const totalGeneration = useMemo(() =>
     generationData.reduce((sum, d) => sum + d.value, 0), [generationData]
   );
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       <Navbar />
-      
+
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-        
+
         <main className="flex-1 p-6 overflow-hidden flex flex-col gap-4">
           {/* Stats Row */}
           <div className="grid grid-cols-4 gap-4 shrink-0">
@@ -66,19 +66,19 @@ export default function ProsumerDashboard() {
             {/* Chart Area */}
             <div className="col-span-2 flex flex-col gap-4 min-h-0">
               <div className="flex-1 min-h-0">
-                <EnergyChart 
-                  data={generationData} 
-                  title="Energy Generation (kWh)" 
+                <EnergyChart
+                  data={generationData}
+                  title="Energy Generation (kWh)"
                   color="hsl(142 76% 45%)"
                   gradientId="genGradient"
                 />
               </div>
-              
+
               {/* Transfer History */}
               <div className="h-48">
-                <TransferList 
-                  transfers={transfers.slice(0, 6)} 
-                  title="Recent Transfers" 
+                <TransferList
+                  transfers={transfers.slice(0, 6)}
+                  title="Recent Transfers"
                 />
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function ProsumerDashboard() {
             {/* Credits Panel */}
             <div className="glass-card p-4 flex flex-col">
               <h3 className="text-sm font-medium text-muted-foreground mb-4">Credits & Carbon</h3>
-              
+
               <div className="flex-1 flex flex-col gap-4">
                 {/* Credits Earned */}
                 <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">

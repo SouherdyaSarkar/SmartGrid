@@ -6,6 +6,7 @@ export interface User {
   email: string;
   role: UserRole;
   avatar?: string;
+  meter_id?: string;
 }
 
 export interface EnergyTransfer {
@@ -18,17 +19,10 @@ export interface EnergyTransfer {
   status: 'completed' | 'pending' | 'failed';
 }
 
-export interface ConsumerRequest {
-  id: string;
-  consumerId: string;
-  consumerName: string;
-  requestedUnits: number;
-  timestamp: Date;
-  status: 'pending' | 'approved' | 'rejected';
-  locationId: string;
-}
-
 export interface EnergyData {
   time: string;
-  value: number;
+  value: number; // For backward compatibility with charts
+  meter_type?: 'prosumer' | 'consumer';
+  avg_power_w_p?: number;
+  avg_power_w_c?: number;
 }
