@@ -119,3 +119,53 @@ app.post("/api/meter-data", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Grid Function: Run every 5 minutes
+const GRID_INTERVAL_MS = 5 * 60 * 1000;
+
+setInterval(async () => {
+  try {
+    console.log("Running Grid Stats Aggregation...");
+    const snapshot = await db.ref('meters').once('value');
+    const meters = snapshot.val();
+
+    if (!meters) return;
+
+    let totalGeneration = 0;
+    let totalConsumption = 0;
+    let activeProsumers = 0;
+    let activeConsumers = 0;
+
+    Object.values(meters).forEach((meter: any) => {
+      const summary = meter.summary;
+      if (!summary) return;
+
+      // Use the last known power value
+      const power = summary.last_power_w || 0;
+
+      if (summary.type === 'prosumer') {
+        totalGeneration += power;
+        activeProsumers++;
+      } else if (summary.type === 'consumer') {
+        totalConsumption += power;
+        activeConsumers++;
+      }
+    });
+
+    const gridStats = {
+      total_generation_w: totalGeneration,
+      total_consumption_w: totalConsumption,
+      net_grid_load_w: totalConsumption - totalGeneration,
+      active_prosumers: activeProsumers,
+      active_consumers: activeConsumers,
+      timestamp: new Date().toISOString(),
+      status: totalGeneration >= totalConsumption ? 'positive' : 'negative'
+    };
+
+    await db.ref('grid/summary').set(gridStats);
+    console.log("Grid stats updated:", gridStats);
+
+  } catch (error) {
+    console.error("Grid aggregation failed:", error);
+  }
+}, GRID_INTERVAL_MS);
