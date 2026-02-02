@@ -1,0 +1,17 @@
+# Dependencies
+frontend/node_modules/
+backend/node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.*
+! .env.example
+
+# Backend specific
+backend/.env
+backend/service-secret/
+
+# Frontend specific
+frontend/.env
+backend/.env

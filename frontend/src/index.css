@@ -1,0 +1,124 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 142 76% 45%;
+    --primary-foreground: 222 47% 6%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 142 76% 45%;
+    --accent-foreground: 222 47% 6%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 20%;
+    --input: 217 33% 17%;
+    --ring: 142 76% 45%;
+
+    --radius: 0.75rem;
+
+    --chart-green: 142 76% 45%;
+    --chart-blue: 199 89% 48%;
+    --chart-orange: 25 95% 53%;
+    --chart-purple: 263 70% 50%;
+    --chart-cyan: 186 100% 42%;
+
+    --energy-positive: 142 76% 45%;
+    --energy-negative: 0 84% 60%;
+    --energy-neutral: 199 89% 48%;
+
+    --glow-primary: 0 0 20px hsl(142 76% 45% / 0.3);
+    --glow-accent: 0 0 30px hsl(142 76% 45% / 0.2);
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 142 76% 45%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 217 33% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 15%;
+    --sidebar-ring: 142 76% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: "Inter", sans-serif;
+  }
+
+  .mono {
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
+  }
+
+  .energy-glow {
+    box-shadow: var(--glow-primary);
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-[hsl(var(--chart-cyan))] bg-clip-text text-transparent;
+  }
+
+  .stat-card {
+    @apply glass-card p-4 flex flex-col gap-2 transition-all duration-300 hover:border-primary/50;
+  }
+
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground transition-all duration-200 hover:bg-sidebar-accent hover:text-foreground cursor-pointer;
+  }
+
+  .sidebar-item-active {
+    @apply bg-primary/10 text-primary border-l-2 border-primary;
+  }
+
+  .data-table-row {
+    @apply flex items-center justify-between py-3 px-4 border-b border-border/30 hover:bg-muted/30 transition-colors;
+  }
+
+  .pulse-dot {
+    @apply w-2 h-2 rounded-full bg-primary animate-pulse;
+  }
+
+  .chart-container {
+    @apply glass-card p-4 h-full;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
