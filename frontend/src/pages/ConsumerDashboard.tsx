@@ -11,21 +11,21 @@ import { cn } from '@/lib/utils';
 export default function ConsumerDashboard() {
   const [activeItem, setActiveItem] = useState('dashboard');
   const [requestActive, setRequestActive] = useState(false);
-  
-  const consumptionData = useMemo(() => generateTimeSeriesData(24), []);
+
+  const consumptionData = useMemo(() => generateTimeSeriesData(24, 'consumer'), []);
   const incomingTransfers = useMemo(() => generateTransfers(15), []);
 
-  const totalConsumption = useMemo(() => 
+  const totalConsumption = useMemo(() =>
     consumptionData.reduce((sum, d) => sum + d.value, 0), [consumptionData]
   );
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       <Navbar />
-      
+
       <div className="flex-1 flex overflow-hidden">
         <Sidebar activeItem={activeItem} onItemClick={setActiveItem} />
-        
+
         <main className="flex-1 p-6 overflow-hidden flex flex-col gap-4">
           {/* Stats Row */}
           <div className="grid grid-cols-4 gap-4 shrink-0">
@@ -66,19 +66,19 @@ export default function ConsumerDashboard() {
             {/* Chart Area */}
             <div className="col-span-2 flex flex-col gap-4 min-h-0">
               <div className="flex-1 min-h-0">
-                <EnergyChart 
-                  data={consumptionData} 
-                  title="Energy Consumption (kWh)" 
+                <EnergyChart
+                  data={consumptionData}
+                  title="Energy Consumption (kWh)"
                   color="hsl(199 89% 48%)"
                   gradientId="consGradient"
                 />
               </div>
-              
+
               {/* Incoming Energy List */}
               <div className="h-48">
-                <TransferList 
-                  transfers={incomingTransfers.slice(0, 6)} 
-                  title="Incoming Energy" 
+                <TransferList
+                  transfers={incomingTransfers.slice(0, 6)}
+                  title="Incoming Energy"
                   showSource
                 />
               </div>
@@ -87,15 +87,15 @@ export default function ConsumerDashboard() {
             {/* Request Panel */}
             <div className="glass-card p-4 flex flex-col">
               <h3 className="text-sm font-medium text-muted-foreground mb-4">Energy Request</h3>
-              
+
               <div className="flex-1 flex flex-col gap-4">
                 {/* Request Toggle */}
-                <div 
+                <div
                   onClick={() => setRequestActive(!requestActive)}
                   className={cn(
                     "relative rounded-xl p-6 cursor-pointer transition-all duration-300 border-2",
-                    requestActive 
-                      ? "bg-primary/10 border-primary" 
+                    requestActive
+                      ? "bg-primary/10 border-primary"
                       : "bg-muted/30 border-border hover:border-primary/50"
                   )}
                 >
@@ -112,8 +112,8 @@ export default function ConsumerDashboard() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {requestActive 
-                      ? "Monitoring active - tracking consumption" 
+                    {requestActive
+                      ? "Monitoring active - tracking consumption"
                       : "Slide to start monitoring energy needs"}
                   </p>
                   {requestActive && (

@@ -32,38 +32,83 @@ app.post("/api/meter-data", async (req, res) => {
   try {
     const {
       timestamp,
-      avg_power_w,
+      avg_power_w_p, // Prosumer power
+      avg_power_w_c, // Consumer power
       energy_wh_interval,
       energy_wh_total,
       meter_id,
+      meter_type, // 'prosumer' | 'consumer'
     } = req.body;
 
-    // 1. Basic validation (keep it cheap)
-    if (
-      !timestamp ||
-      typeof avg_power_w !== "number" ||
-      typeof energy_wh_interval !== "number" ||
-      typeof energy_wh_total !== "number"
-    ) {
-      return res.status(400).json({ error: "Invalid payload" });
+    const meterId = meter_id || "meter_001";
+
+    // Future: DB Lookup for meter_type if not provided
+    /*
+    let type = meter_type;
+    if (!type) {
+       const snapshot = await db.ref(`meter_registry/${meterId}/type`).once('value');
+       type = snapshot.val();
+    }
+    */
+
+    let finalType = meter_type;
+    let powerValue = 0;
+
+    // Validate based on type
+    if (meter_type === 'prosumer') {
+      if (typeof avg_power_w_p !== 'number') {
+        return res.status(400).json({ error: "Missing avg_power_w_p for prosumer" });
+      }
+      powerValue = avg_power_w_p;
+    } else if (meter_type === 'consumer') {
+      if (typeof avg_power_w_c !== 'number') {
+        return res.status(400).json({ error: "Missing avg_power_w_c for consumer" });
+      }
+      powerValue = avg_power_w_c;
+      finalType = 'consumer';
+    } else {
+      // Fallback or Error? For now letting generic pass if fields are there, 
+      // but strictly based on instructions we want differentiation.
+      // If neither is strictly defined, check which field exists
+      if (typeof avg_power_w_p === 'number') {
+        finalType = 'prosumer';
+        powerValue = avg_power_w_p;
+      } else if (typeof avg_power_w_c === 'number') {
+        finalType = 'consumer';
+        powerValue = avg_power_w_c;
+      } else {
+        return res.status(400).json({ error: "Invalid payload: Unknown meter type or missing power data" });
+      }
     }
 
-    const meterId = meter_id || "meter_001";
+    if (!timestamp || typeof energy_wh_interval !== "number" || typeof energy_wh_total !== "number") {
+      return res.status(400).json({ error: "Invalid payload: missing common fields" });
+    }
 
     // 2. Create DB reference
     const ref = db.ref(`meters/${meterId}/readings`).push();
 
     // 3. Write data
-    await ref.set({
+    const payload: any = {
       timestamp,
-      avg_power_w,
       energy_wh_interval,
       energy_wh_total,
+      meter_type: finalType,
       server_received_at: new Date().toISOString(),
-    });
+    };
 
-    // 4. Update summary (optional but recommended)
+    if (finalType === 'prosumer') {
+      payload.avg_power_w_p = powerValue;
+    } else {
+      payload.avg_power_w_c = powerValue;
+    }
+
+    await ref.set(payload);
+
+    // 4. Update summary
     await db.ref(`meters/${meterId}/summary`).update({
+      type: finalType,
+      last_power_w: powerValue,
       total_energy_wh: energy_wh_total,
       last_updated: new Date().toISOString(),
     });
@@ -74,3 +119,53 @@ app.post("/api/meter-data", async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// Grid Function: Run every 5 minutes
+const GRID_INTERVAL_MS = 5 * 60 * 1000;
+
+setInterval(async () => {
+  try {
+    console.log("Running Grid Stats Aggregation...");
+    const snapshot = await db.ref('meters').once('value');
+    const meters = snapshot.val();
+
+    if (!meters) return;
+
+    let totalGeneration = 0;
+    let totalConsumption = 0;
+    let activeProsumers = 0;
+    let activeConsumers = 0;
+
+    Object.values(meters).forEach((meter: any) => {
+      const summary = meter.summary;
+      if (!summary) return;
+
+      // Use the last known power value
+      const power = summary.last_power_w || 0;
+
+      if (summary.type === 'prosumer') {
+        totalGeneration += power;
+        activeProsumers++;
+      } else if (summary.type === 'consumer') {
+        totalConsumption += power;
+        activeConsumers++;
+      }
+    });
+
+    const gridStats = {
+      total_generation_w: totalGeneration,
+      total_consumption_w: totalConsumption,
+      net_grid_load_w: totalConsumption - totalGeneration,
+      active_prosumers: activeProsumers,
+      active_consumers: activeConsumers,
+      timestamp: new Date().toISOString(),
+      status: totalGeneration >= totalConsumption ? 'positive' : 'negative'
+    };
+
+    await db.ref('grid/summary').set(gridStats);
+    console.log("Grid stats updated:", gridStats);
+
+  } catch (error) {
+    console.error("Grid aggregation failed:", error);
+  }
+}, GRID_INTERVAL_MS);
